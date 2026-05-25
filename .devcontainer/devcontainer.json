@@ -1,16 +1,16 @@
 {
-  "name": "Persistent Ubuntu Desktop",
-  "image": "://microsoft.com",
+  "name": "Ubuntu GUI Machine",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
   "features": {
     "ghcr.io/devcontainers/features/desktop-lite:1": {
       "version": "latest"
     }
   },
-  "postCreateCommand": "bash .devcontainer/setup-persistence.sh",
+  "postCreateCommand": "bash .devcontainer/setup.sh",
   "forwardPorts": [6080],
   "portsAttributes": {
     "6080": {
-      "label": "Ubuntu Desktop GUI",
+      "label": "Linux Desktop",
       "onAutoForward": "openBrowser"
     }
   }
