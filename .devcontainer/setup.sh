@@ -1,74 +1,105 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+set -euo pipefail
 
 USER_HOME="/home/vscode"
-PERSIST="/workspaces/$(basename "$PWD")/.persist"
-BIN="$PERSIST/bin"
+REPO_NAME="$(basename "$(pwd)")"
+PERSIST_ROOT="/workspaces/${REPO_NAME}/.persist"
+PERSIST_HOME="${PERSIST_ROOT}/home"
 
-echo "🚀 Starting setup..."
+MARKER="${PERSIST_ROOT}/.installed_v1"
 
-# -------------------------
-# 1. PERSISTENCE
-# -------------------------
-mkdir -p "$PERSIST"/{config,share,bin}
-sudo chown -R vscode:vscode "$PERSIST"
+echo "==> Persistent root: ${PERSIST_ROOT}"
 
-rm -rf "$USER_HOME/.config"
-ln -s "$PERSIST/config" "$USER_HOME/.config"
+# -----------------------------
+# 1) Persistence (safe + idempotent)
+# -----------------------------
+mkdir -p "${PERSIST_HOME}"/.config \
+         "${PERSIST_HOME}"/.cache \
+         "${PERSIST_HOME}"/.local/share \
+         "${PERSIST_HOME}"/.vnc \
+         "${PERSIST_ROOT}"/bin \
+         "${USER_HOME}/Desktop"
 
-mkdir -p "$USER_HOME/.local"
-rm -rf "$USER_HOME/.local/share"
-ln -s "$PERSIST/share" "$USER_HOME/.local/share"
+# Fix ownership (Codespaces user is vscode)
+sudo chown -R vscode:vscode "${PERSIST_ROOT}"
 
-# Add local bin to PATH
-if ! grep -q "$BIN" "$USER_HOME/.bashrc"; then
-    echo "export PATH=\$PATH:$BIN" >> "$USER_HOME/.bashrc"
+link_dir() {
+  local src="$1"
+  local dst="$2"
+  if [ -L "${dst}" ]; then
+    return 0
+  fi
+  if [ -e "${dst}" ] && [ ! -L "${dst}" ]; then
+    rm -rf "${dst}"
+  fi
+  ln -s "${src}" "${dst}"
+}
+
+# Persist the main GUI/user settings
+mkdir -p "${USER_HOME}/.local"
+link_dir "${PERSIST_HOME}/.config"       "${USER_HOME}/.config"
+link_dir "${PERSIST_HOME}/.cache"        "${USER_HOME}/.cache"
+link_dir "${PERSIST_HOME}/.local/share"  "${USER_HOME}/.local/share"
+link_dir "${PERSIST_HOME}/.vnc"          "${USER_HOME}/.vnc"
+
+# -----------------------------
+# 2) Install LXQt + Chromium (only once)
+# -----------------------------
+if ! command -v apt-get >/dev/null 2>&1; then
+  echo "!! apt-get not found. This usually means the codespace is still in recovery mode."
+  echo "!! Delete the codespace and create a NEW one after committing these files."
+  exit 0
 fi
 
-# -------------------------
-# 2. INSTALL LXQt (MODERN UI)
-# -------------------------
-sudo apt update
-sudo DEBIAN_FRONTEND=noninteractive apt install -y \
-    lxqt-core lxqt-panel openbox lxterminal \
-    papirus-icon-theme arc-theme
+if [ ! -f "${MARKER}" ]; then
+  echo "==> Installing packages (first run only)..."
+  sudo apt-get update -y
 
-# Use LXQt instead of XFCE
-echo "startlxqt" > "$USER_HOME/.xsession"
+  # LXQt desktop + Chromium browser + essentials for GUI sessions
+  sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    lxqt \
+    lxqt-session \
+    openbox \
+    dbus-x11 \
+    chromium \
+    ca-certificates \
+    fonts-dejavu \
+    xdg-utils
 
-# -------------------------
-# 3. INSTALL CHROMIUM
-# -------------------------
-sudo apt install -y chromium-browser
+  touch "${MARKER}"
+  echo "==> Package install complete."
+else
+  echo "==> Packages already installed (marker found)."
+fi
 
-# -------------------------
-# 4. CREATE DESKTOP SHORTCUT
-# -------------------------
-mkdir -p "$USER_HOME/Desktop"
+# -----------------------------
+# 3) Make desktop-lite start LXQt (TigerVNC uses ~/.vnc/xstartup)
+# -----------------------------
+XSTARTUP="${USER_HOME}/.vnc/xstartup"
+cat > "${XSTARTUP}" <<'EOF'
+#!/bin/sh
+unset SESSION_MANAGER
+unset DBUS_SESSION_BUS_ADDRESS
 
-cat > "$USER_HOME/Desktop/Chromium.desktop" <<EOF
+export XDG_RUNTIME_DIR="/tmp/runtime-vscode"
+mkdir -p "$XDG_RUNTIME_DIR"
+chmod 700 "$XDG_RUNTIME_DIR"
+
+exec dbus-launch --exit-with-session startlxqt
+EOF
+chmod +x "${XSTARTUP}"
+
+# -----------------------------
+# 4) Desktop shortcut for Chromium
+# -----------------------------
+cat > "${USER_HOME}/Desktop/Chromium.desktop" <<EOF
 [Desktop Entry]
 Name=Chromium
-Exec=chromium-browser --disable-gpu --disable-software-rasterizer
+Exec=chromium --disable-gpu --disable-dev-shm-usage
 Icon=chromium
 Type=Application
-Categories=Network;
+Categories=Network;WebBrowser;
 EOF
+chmod +x "${USER_HOME}/Desktop/Chromium.desktop"
 
-chmod +x "$USER_HOME/Desktop/Chromium.desktop"
-
-# -------------------------
-# 5. AUTO-START BROWSER (optional but useful)
-# -------------------------
-mkdir -p "$USER_HOME/.config/autostart"
-
-cat > "$USER_HOME/.config/autostart/chromium.desktop" <<EOF
-[Desktop Entry]
-Type=Application
-Exec=chromium-browser --disable-gpu --disable-software-rasterizer
-Hidden=false
-X-GNOME-Autostart-enabled=true
-Name=Chromium
-EOF
-
-echo "✅ Setup Complete!"
+echo "==> Setup finished. Open the desktop on port 6080 (password: vscode)."
