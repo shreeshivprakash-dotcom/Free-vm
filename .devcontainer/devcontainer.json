@@ -1,17 +1,19 @@
 {
-  "name": "Linux GUI LXQt",
-  "image": "mcr.microsoft.com/devcontainers/universal:2",
+  "name": "LXQt + Chromium (Persistent) - Codespaces Desktop",
+  "image": "mcr.microsoft.com/devcontainers/base:bookworm",
   "features": {
     "ghcr.io/devcontainers/features/desktop-lite:1": {
-      "version": "latest"
+      "webPort": "6080",
+      "password": "vscode"
     }
   },
-  "postCreateCommand": "bash .devcontainer/setup.sh",
   "forwardPorts": [6080],
   "portsAttributes": {
     "6080": {
-      "label": "Linux Desktop",
+      "label": "Linux Desktop (noVNC)",
       "onAutoForward": "openBrowser"
     }
-  }
+  },
+  "postCreateCommand": "bash .devcontainer/setup.sh",
+  "postStartCommand": "bash .devcontainer/setup.sh"
 }
