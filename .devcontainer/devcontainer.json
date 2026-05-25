@@ -1,5 +1,5 @@
 {
-  "name": "Ubuntu GUI Machine",
+  "name": "Linux GUI (LXQt)",
   "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
   "features": {
     "ghcr.io/devcontainers/features/desktop-lite:1": {
