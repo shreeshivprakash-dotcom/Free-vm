@@ -1,5 +1,5 @@
 {
-  "name": "Modern Fluxbox + Chromium (Persistent) - Codespaces Desktop",
+  "name": "LXQt + Chromium (Persistent)",
   "image": "mcr.microsoft.com/devcontainers/base:bookworm",
   "features": {
     "ghcr.io/devcontainers/features/desktop-lite:1": {
@@ -10,10 +10,11 @@
   "forwardPorts": [6080],
   "portsAttributes": {
     "6080": {
-      "label": "Linux Desktop (noVNC)",
+      "label": "LXQt Desktop",
       "onAutoForward": "openBrowser"
     }
   },
+  "runArgs": ["--shm-size=1g"],
   "postCreateCommand": "bash .devcontainer/setup.sh",
   "postStartCommand": "bash .devcontainer/setup.sh"
 }
