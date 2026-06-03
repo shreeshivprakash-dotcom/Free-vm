@@ -1,5 +1,5 @@
 {
-  "name": "LXQt + Chromium (Persistent) - Codespaces Desktop",
+  "name": "Modern Fluxbox + Chromium (Persistent) - Codespaces Desktop",
   "image": "mcr.microsoft.com/devcontainers/base:bookworm",
   "features": {
     "ghcr.io/devcontainers/features/desktop-lite:1": {
