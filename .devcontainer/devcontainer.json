@@ -1,20 +1,12 @@
 {
-  "name": "LXQt + Chromium (Persistent)",
-  "image": "mcr.microsoft.com/devcontainers/base:bookworm",
-  "features": {
-    "ghcr.io/devcontainers/features/desktop-lite:1": {
-      "webPort": "6080",
-      "password": "vscode"
-    }
+  "name": "Kali Cybersecurity Lab",
+  "build": {
+    "dockerfile": "Dockerfile"
   },
-  "forwardPorts": [6080],
-  "portsAttributes": {
-    "6080": {
-      "label": "LXQt Desktop",
-      "onAutoForward": "openBrowser"
-    }
+  "settings": {
+    "terminal.integrated.defaultProfile.linux": "bash"
   },
-  "runArgs": ["--shm-size=1g"],
-  "postCreateCommand": "bash .devcontainer/setup.sh",
-  "postStartCommand": "bash .devcontainer/setup.sh"
+  "postCreateCommand": "echo 'Kali ready ✅'",
+  "remoteUser": "root"
 }
+``
