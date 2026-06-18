@@ -6,4 +6,4 @@
   "remoteUser": "root",
   "postCreateCommand": "bash /root/setup.sh"
 }
-``
+
