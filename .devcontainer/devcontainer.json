@@ -1,12 +1,8 @@
 {
-  "name": "Kali Cybersecurity Lab",
+  "name": "Kali Rolling Stable",
   "build": {
     "dockerfile": "Dockerfile"
   },
-  "settings": {
-    "terminal.integrated.defaultProfile.linux": "bash"
-  },
-  "postCreateCommand": "echo 'Kali ready ✅'",
-  "remoteUser": "root"
+  "remoteUser": "root",
+  "postCreateCommand": "bash /root/setup.sh"
 }
-``
